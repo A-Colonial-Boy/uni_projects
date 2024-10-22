@@ -1,0 +1,92 @@
+      *-----------------------
+      *
+      * COBOL PROGRAM TO DEMONSTRATE READING
+      * A SEQUENTIAL FILE
+      * RECORD-BY-RECORD DISPLAYING
+      * ITS CONTENTS TO THE SCREEN.
+      *
+      * THIS PROGRAM WORKS ONLY WITH THE PHONEBOOX
+      * FILE FORMAT
+      *-----------------------
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PHONELST.
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT PHONE-FILE ASSIGN TO PHONBOOK
+              ORGANIZATION IS SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD   PHONE-FILE RECORDING MODE F
+           LABEL RECORDS ARE STANDARD.
+       01  PHONE-RECORD.
+           05 PHONE-LAST-NAME   PIC X(20).
+           05 PHONE-FIRST-NAME  PIC X(20).
+           05 PHONE-NUMBER      PIC X(15).
+           05 EMAIL             PIC X(25).
+
+       WORKING-STORAGE SECTION.
+       01 FIELDS-TO-DISPLAY.
+           05 PROMPT-1           PIC X(10) VALUE "Last Name:".
+           05 DISPLAY-LAST-NAME  PIC X(20).
+           05 PROMPT-2           PIC X(6) VALUE "First:".
+           05 DISPLAY-FIRST-NAME PIC X(20).
+           05 PROMPT-3           PIC X(3) VALUE "NO:".
+           05 DISPLAY-NUMBER     PIC X(20).
+           05 PROMPT-4           PIC X(6) VALUE "EMAIL:".
+           05 DISPLAY-EMAIL      PIC X(25).
+
+       01 END-OF-FILE  PIC X.
+
+       01 SCREEN-LINES PIC 99.
+       01 DUMMYIN      PIC X.
+
+       PROCEDURE DIVISION.
+       MAIN-LOGIC SECTION.
+       PROGRAM-BEGIN.
+
+           PERFORM OPENING-PROCEDURE.
+           MOVE ZEROES TO SCREEN-LINES.
+           MOVE "N" TO END-OF-FILE.
+           PERFORM READ-NEXT-RECORD.
+           PERFORM DISPLAY-RECORDS
+              UNTIL END-OF-FILE = "Y".
+           PERFORM CLOSING-PROCEDURE.
+
+       PROGRAM-DONE.
+           STOP RUN.
+
+       OPENING-PROCEDURE.
+           OPEN INPUT PHONE-FILE.
+
+       CLOSING-PROCEDURE.
+           CLOSE PHONE-FILE.
+
+       DISPLAY-RECORDS.
+           PERFORM DISPLAY-FIELDS.
+           PERFORM READ-NEXT-RECORD.
+
+       DISPLAY-FIELDS.
+           IF SCREEN-LINES = 25
+              PERFORM PRESS-ENTER.
+           MOVE PHONE-LAST-NAME to DISPLAY-LAST-NAME.
+           MOVE PHONE-FIRST-NAME TO DISPLAY-FIRST-NAME.
+           MOVE PHONE-NUMBER to DISPLAY-NUMBER.
+           MOVE EMAIL TO DISPLAY-EMAIL.
+           DISPLAY FIELDS-TO-DISPLAY.
+
+      * Read the next record from the phone file
+      * if we reach the end, we sent END-OF-FILE
+      * to Y
+       READ-NEXT-RECORD.
+           READ PHONE-FILE NEXT RECORD
+              AT END
+              MOVE "Y" TO END-OF-FILE.
+
+      * Prompt the user to press enter
+      * Use as a simple method of screen paging
+       PRESS-ENTER.
+           DISPLAY "Press ENTER to continue.........".
+           ACCEPT DUMMYIN.
+           MOVE ZEROES TO SCREEN-LINES.
