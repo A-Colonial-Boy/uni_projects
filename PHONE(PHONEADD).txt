@@ -1,0 +1,123 @@
+      *-----------------------------------------------
+      *
+      * COBOL Program to Demonstrate adding records
+      * to a sequential file.
+      *
+      * The teaching tool is a simple phone book
+      * that stores last name, first name, and
+      * phone number.
+      *
+      * Author: Scott Piersall
+      *	        Emily Hanson
+      * ----------------------------------------------
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PHONEADD.
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      * ----------------------------------------------
+      * We SELECT OPTIONAL becuase we are
+      * using OPEN EXTEND to open the phonebook file
+      * and we want the file to be created if it does
+      * not already exist.
+      * IBM Z/OS Enterprise COBOL NOTE
+      *
+      * https://
+      *www.ibm.com/docs/en/cobol-zos/6.3?topic=statements-open-statement
+      *
+      * If you want to append to a file, but are unsure
+      * if the file exists, use the SELECT OPTIONAL clause
+      * before opening the file in EXTEND mode. The file
+      * will be created or appended to,
+      * depending on whether the file exists.
+      * ----------------------------------------------
+           SELECT OPTIONAL PHONE-FILE ASSIGN TO PHONBOOK
+              ORGANIZATION IS SEQUENTIAL.
+
+      * Recording MODE F - Fixed
+      * Denotes all records in the file are the same length
+      *
+      * IBM z/OS ENTERPRISE COBOL NOTE
+      *
+      * https://
+      *www.ibm.com/docs/en/cobol-zos/6.2?topic=entries-recording-mode-clause
+      *
+      * NOTE: THe filler field is added to:
+      *     1. SUpport adding additional fields to the record
+      *     2. Dataset sizes on our Mainframe default to a size of 80
+      *           which is required for our record sizes
+      *           using default DS Allocation in OUR z/OS Environment
+       DATA DIVISION.
+       FILE SECTION.
+       FD  PHONE-FILE RECORDING MODE F
+           LABEL RECORDS ARE STANDARD.
+       01  PHONE-RECORD.
+           05 PHONE-LAST-NAME   PIC X(20).
+           05 PHONE-FIRST-NAME  PIC X(20).
+           05 PHONE-NUMBER      PIC X(15).
+           05 EMAIL      PIC X(25).
+
+       WORKING-STORAGE SECTION.
+       01  PROMPT-1    PIC X(9) VALUE "Last Name".
+       01  PROMPT-2    PIC X(10) VALUE "First Name".
+       01  PROMPT-3    PIC X(6) VALUE "Number".
+       01  PROMPT-4    PIC X(5)  VALUE "Email".
+
+       01  YES-NO      PIC X.
+       01  ENTRY-OK    PIC X.
+
+       PROCEDURE DIVISION.
+       MAIN-LOGIC SECTION.
+       PROGRAM-BEGIN.
+           PERFORM OPENING-PROCEDURE.
+           MOVE "Y" TO YES-NO.
+           PERFORM ADD-RECORDS
+              UNTIL YES-NO = "N".
+           PERFORM CLOSING-PROCEDURE.
+       PROGRAM-DONE.
+           STOP RUN.
+      * ---------------------------------------------------------
+      * Open PHONE-FILE for APPENDING. If the file does not exist
+      * it is created (due to our SELECT OPTIONAL)
+      * ---------------------------------------------------------
+       OPENING-PROCEDURE.
+           OPEN EXTEND PHONE-FILE.
+
+       CLOSING-PROCEDURE.
+           CLOSE PHONE-FILE.
+
+       ADD-RECORDS.
+           MOVE "N" to ENTRY-OK.
+           PERFORM GET-FIELDS
+              UNTIL ENTRY-OK = "Y".
+           PERFORM ADD-THIS-RECORD.
+           PERFORM GO-AGAIN.
+
+       GET-FIELDS.
+           MOVE SPACE TO PHONE-RECORD.
+           DISPLAY PROMPT-1 " ? ".
+           ACCEPT PHONE-LAST-NAME.
+           DISPLAY PROMPT-2 " ? ".
+           ACCEPT PHONE-FIRST-NAME.
+           DISPLAY PROMPT-3 " ? "
+           ACCEPT PHONE-NUMBER.
+           DISPLAY PROMPT-4 " ? "
+           ACCEPT EMAIL.
+           PERFORM VALIDATE-FIELDS.
+
+       VALIDATE-FIELDS.
+           MOVE "Y" to ENTRY-OK.
+           IF PHONE-LAST-NAME = SPACE
+              DISPLAY "LAST NAME IS REQUIRED"
+              MOVE "N" TO ENTRY-OK.
+
+       ADD-THIS-RECORD.
+           WRITE PHONE-RECORD.
+
+       GO-AGAIN.
+           DISPLAY "Enter Another ?".
+           ACCEPT YES-NO.
+           IF YES-NO = "Y"
+              MOVE "Y" to YES-NO.
+           IF YES-NO NOT = "Y"
+              MOVE "N" to YES-NO.
